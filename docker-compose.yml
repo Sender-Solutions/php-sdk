@@ -1,0 +1,48 @@
+services:
+
+    # PHP service
+    app:
+        build:
+            context: .
+            dockerfile: ./docker/php/Dockerfile
+            args:
+                XDEBUG_HOST: ${XDEBUG_HOST}
+                ENV: ${ENV}
+        container_name: ${PROJECT_NAME}-php-app
+        working_dir: /var/www/
+        restart: always
+        environment:
+            XDEBUG_CONFIG: "remote_host=${XDEBUG_HOST} remote_enable=1"
+            PHP_IDE_CONFIG: "serverName=docker"
+            XDEBUG_HOST: ${XDEBUG_HOST}
+        volumes:
+            - ./:/var/www
+        networks:
+            - ${PROJECT_NAME}-app-network
+        links:
+            - nginx
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "128m"
+
+    # Nginx service
+    nginx:
+        image: nginx:alpine
+        container_name: ${PROJECT_NAME}-php-nginx
+        restart: always
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "128m"
+        ports:
+            - 7009:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+        networks:
+            - ${PROJECT_NAME}-app-network
+
+networks:
+    sender-sdk-app-network:
+        driver: bridge

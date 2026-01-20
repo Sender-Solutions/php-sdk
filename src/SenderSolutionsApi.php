@@ -172,10 +172,11 @@ class SenderSolutionsApi
     /**
      * @param int $subscriberId
      * @param int $campaignId
+     * @param array $variables
      * @return string MessageId
      * @throws ApiException
      */
-    public function sendSubscriberIntoCampaign(int $subscriberId, int $campaignId): string
+    public function sendSubscriberIntoCampaign(int $subscriberId, int $campaignId, array $variables = []): string
     {
         $data = [
             'SendIntoCampaign' => [
@@ -183,6 +184,9 @@ class SenderSolutionsApi
                 'CampaignId' => $campaignId,
             ],
         ];
+        if (!empty($variables)) {
+            $data['SendIntoCampaign']['Variables'] = $variables;
+        }
         $json = $this->apiCall('POST', 'subscribers/send-subscriber-into-campaign/', $data);
 
         return $json['SendIntoCampaign']['MessageId'];

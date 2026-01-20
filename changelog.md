@@ -1,5 +1,11 @@
 # Change Log
 
+## Version 1.0.1 (January 20th, 2026)
+### Added
+
+- Method `SenderSolutionsApi::sendSubscriberIntoCampaign`: added a third optional argument to support user
+defined variables that will be passed to the template.
+
 ## Version 1.0.0 (January 18th, 2026)
 ### Added
 

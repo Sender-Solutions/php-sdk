@@ -4,6 +4,7 @@ namespace SenderSolutions;
 
 use Generator;
 use GuzzleHttp\Exception\ServerException;
+use SenderSolutions\Email\EmailDtoInterface;
 use SenderSolutions\Subscriber\Subscriber;
 use Exception;
 use GuzzleHttp\Client;
@@ -23,7 +24,7 @@ class SenderSolutionsApi
     {
     }
 
-    private function apiCall(string $method, string $endpoint, array $data = []): array
+    private function apiCall(string $method, string $endpoint, array $data = []): ApiResponse
     {
         $params = [
             RequestOptions::HEADERS => [
@@ -59,9 +60,8 @@ class SenderSolutionsApi
             throw $e;
         }
 
-        $response = $response->getBody()->getContents();
-        $json = json_decode($response, true);
-
+        $ApiResponse = ApiResponse::fromGuzzleResponse($response);
+        $json = $ApiResponse->getJson();
         if (!$json) {
             throw new Exception('Invalid JSON Response');
         }
@@ -70,7 +70,7 @@ class SenderSolutionsApi
             throw new Exception($json['error']);
         }
 
-        return $json;
+        return $ApiResponse;
     }
 
     public function getApiUrl(): string
@@ -97,7 +97,8 @@ class SenderSolutionsApi
         $data['Offset'] = $offset;
         $data['Limit'] = $limit;
 
-        $json = $this->apiCall('GET', 'subscribers/subscribers-list/?' . http_build_query($data));
+        $ApiResponse = $this->apiCall('GET', 'subscribers/subscribers-list/?' . http_build_query($data));
+        $json = $ApiResponse->getJson();
         $json = $json['SubscribersList'];
 
         return new SubscribersListResult($json['TotalCount'], $json['Offset'], $json['Limit'], $json['Subscribers']);
@@ -132,7 +133,8 @@ class SenderSolutionsApi
         $data = [
             'Subscriber' => $subscriber->toArray(),
         ];
-        $json = $this->apiCall('POST', 'subscribers/create-subscriber/', $data);
+        $ApiResponse = $this->apiCall('POST', 'subscribers/create-subscriber/', $data);
+        $json = $ApiResponse->getJson();
 
         return Subscriber::fromJsonResponse($json['Subscriber']);
     }
@@ -147,7 +149,8 @@ class SenderSolutionsApi
         $data = [
             'Subscriber' => $subscriber->toArray(),
         ];
-        $json = $this->apiCall('POST', 'subscribers/edit-subscriber/', $data);
+        $ApiResponse = $this->apiCall('POST', 'subscribers/edit-subscriber/', $data);
+        $json = $ApiResponse->getJson();
 
         return Subscriber::fromJsonResponse($json['Subscriber']);
     }
@@ -173,10 +176,10 @@ class SenderSolutionsApi
      * @param int $subscriberId
      * @param int $campaignId
      * @param array $variables
-     * @return string MessageId
+     * @return ApiResponse
      * @throws ApiException
      */
-    public function sendSubscriberIntoCampaign(int $subscriberId, int $campaignId, array $variables = []): string
+    public function sendSubscriberIntoCampaign(int $subscriberId, int $campaignId, array $variables = []): ApiResponse
     {
         $data = [
             'SendIntoCampaign' => [
@@ -187,8 +190,14 @@ class SenderSolutionsApi
         if (!empty($variables)) {
             $data['SendIntoCampaign']['Variables'] = $variables;
         }
-        $json = $this->apiCall('POST', 'subscribers/send-subscriber-into-campaign/', $data);
+        return $this->apiCall('POST', 'subscribers/send-subscriber-into-campaign/', $data);
+    }
 
-        return $json['SendIntoCampaign']['MessageId'];
+    public function sendEmail(EmailDtoInterface $email): ApiResponse
+    {
+        $data = [
+            'SendEmail' => $email->toArray(),
+        ];
+        return $this->apiCall('POST', 'emails/send-instant-email/', $data);
     }
 }

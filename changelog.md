@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 1.1.0 (January 27th, 2026)
+### Added
+
+- Method `SenderSolutionsApi::sendEmail`: Sends a prepared Email
+
+### Changed
+
+- Method `SenderSolutionsApi::sendSubscriberIntoCampaign` returns data type SenderSolutions\ApiResponse;
+
 ## Version 1.0.1 (January 20th, 2026)
 ### Added
 

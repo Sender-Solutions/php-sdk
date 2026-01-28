@@ -11,20 +11,55 @@ composer require sender-solutions/php-sdk
 ```php
 <?php
 
+use SenderSolutions\Email\Attachment\AttachmentFacade;
+use SenderSolutions\Email\Email;
+use SenderSolutions\Email\EmailAddress\EmailAddress;
+use SenderSolutions\Email\Headers\EmailHeader;
+use SenderSolutions\Email\Settings\EmailSettings;
 use SenderSolutions\SenderSolutionsApi;
 use SenderSolutions\Subscriber\Base;
 use SenderSolutions\Subscriber\Subscriber;
 
-// initialize SDK
+// Initialize SDK
 $SDK = new SenderSolutionsApi('{your-api-token}');
 
-// create new Subscriber
+// Sending email
+$email = new Email();
+$email
+    ->setHtml('<!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Test Email</title>
+        </head>
+        <body>
+        <h1>Hello</h1>
+        <p>It\'s test email content</p>
+        </body>
+        </html>'
+    )
+    ->setPlainText("Hello\r\nIt's test email content")
+    ->addTo(new EmailAddress('user@example.com', 'Mr. Cat'))
+    ->setFrom(new EmailAddress('info@example.org', 'MyBrand Team'))
+    ->setSubject('Test Email via API')
+    ->setSendAt(time() + 7200) // delayed sending
+    ->setTrackOpen(true)
+    ->setTrackLinks(true)
+    ->setTrackUnsubscribe(true)
+    ->setInlineImages(true)
+;
+
+$ApiResponse = $SDK->sendEmail($email);
+
+
+
+// Create new Subscriber
 $base = new Base(0, 'My New Base');
 $Subscriber = new Subscriber('username1@example.com');
 $Subscriber->setBase($base);
 $resultSubscriber = $SDK->createSubscriber($Subscriber);
 
-// edit Subscriber
+// Edit Subscriber
 $resultSubscriber
     ->setFirstName('Cat')
     ->setLastName('Catstone')
@@ -36,7 +71,7 @@ $resultSubscriber = $SDK->editSubscriber($resultSubscriber);
 $SDK->deleteSubscriber(10145);
 
 
-// get subscribers list
+// Get subscribers list
 $filters = [
     // 'Email' => 'username@example.com',
     // 'BaseId' => 1,

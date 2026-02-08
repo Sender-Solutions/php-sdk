@@ -1,5 +1,12 @@
 # Change Log
 
+## Version 1.2.0 (February 8th, 2026)
+### Added
+
+- Method `SenderSolutionsApi::getAllSuppressions`: Retrieve a list of Suppressions (as \Generator)
+- Method `SenderSolutionsApi::getSuppressionsList`: Retrieve a list of Suppressions (as \SenderSolutions\ListResult)
+- Method `SenderSolutionsApi::deleteSuppression`: Delete a Suppression by Id
+
 ## Version 1.1.0 (January 27th, 2026)
 ### Added
 

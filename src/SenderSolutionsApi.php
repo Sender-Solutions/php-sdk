@@ -9,7 +9,7 @@ use SenderSolutions\Subscriber\Subscriber;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
-use SenderSolutions\Subscriber\SubscribersListResult;
+use SenderSolutions\Suppression\Suppression;
 
 /**
  * @see https://sender-solutions.com/en/help/api/
@@ -88,10 +88,10 @@ class SenderSolutionsApi
      * @param array $filters
      * @param int $limit
      * @param int $offset
-     * @return SubscribersListResult
+     * @return ListResult
      * @throws ApiException
      */
-    public function getSubscribersList(array $filters = [], int $limit = 50, int $offset = 0): SubscribersListResult
+    public function getSubscribersList(array $filters = [], int $limit = 50, int $offset = 0): ListResult
     {
         $data = $filters;
         $data['Offset'] = $offset;
@@ -101,7 +101,27 @@ class SenderSolutionsApi
         $json = $ApiResponse->getJson();
         $json = $json['SubscribersList'];
 
-        return new SubscribersListResult($json['TotalCount'], $json['Offset'], $json['Limit'], $json['Subscribers']);
+        return new ListResult($json['TotalCount'], $json['Offset'], $json['Limit'], $json['Subscribers']);
+    }
+
+    /**
+     * @param array $filters
+     * @param int $limit
+     * @param int $offset
+     * @return ListResult
+     * @throws ApiException
+     */
+    public function getSuppressionsList(array $filters = [], int $limit = 50, int $offset = 0): ListResult
+    {
+        $data = $filters;
+        $data['Offset'] = $offset;
+        $data['Limit'] = $limit;
+
+        $ApiResponse = $this->apiCall('GET', 'suppressions/suppressions-list/?' . http_build_query($data));
+        $json = $ApiResponse->getJson();
+        $json = $json['SuppressionsList'];
+
+        return new ListResult($json['TotalCount'], $json['Offset'], $json['Limit'], $json['Suppressions']);
     }
 
     /**
@@ -116,8 +136,27 @@ class SenderSolutionsApi
 
         do {
             $result = $this->getSubscribersList($filters, $limit, $offset);
-            foreach ($result->getSubscribers() as $subscriber) {
+            foreach ($result->getList() as $subscriber) {
                 yield Subscriber::fromJsonResponse($subscriber);
+            }
+            $offset += $result->getLimit();
+        } while (!$result->isLastPage());
+    }
+
+    /**
+     * @param array $filters
+     * @return Generator<int, Suppression>
+     * @throws ApiException
+     */
+    public function getAllSuppressions(array $filters = []): Generator
+    {
+        $offset = 0;
+        $limit = 250;
+
+        do {
+            $result = $this->getSuppressionsList($filters, $limit, $offset);
+            foreach ($result->getList() as $suppression) {
+                yield Suppression::fromJsonResponse($suppression);
             }
             $offset += $result->getLimit();
         } while (!$result->isLastPage());
@@ -199,5 +238,25 @@ class SenderSolutionsApi
             'SendEmail' => $email->toArray(),
         ];
         return $this->apiCall('POST', 'emails/send-instant-email/', $data);
+    }
+
+    /**
+     * @param int $suppressionId
+     * @return bool
+     */
+    public function deleteSuppression(int $suppressionId): bool
+    {
+        $data = [
+            'Suppression' => [
+                'Id' => $suppressionId,
+            ],
+        ];
+        try {
+            $this->apiCall('POST', 'suppressions/delete-suppression/', $data);
+        } catch (Exception $e) {
+            return false;
+        }
+
+        return true;
     }
 }

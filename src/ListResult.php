@@ -1,14 +1,14 @@
 <?php
 
-namespace SenderSolutions\Subscriber;
+namespace SenderSolutions;
 
-class SubscribersListResult
+class ListResult
 {
     public function __construct(
-        private int $TotalCount,
-        private int $Offset,
-        private int $Limit,
-        private array $Subscribers,
+        protected int $TotalCount,
+        protected int $Offset,
+        protected int $Limit,
+        protected array $List,
     )
     {
     }
@@ -24,7 +24,7 @@ class SubscribersListResult
             'TotalCount' => $this->TotalCount,
             'Offset' => $this->Offset,
             'Limit' => $this->Limit,
-            'Subscribers' => $this->Subscribers,
+            'List' => $this->List,
         ];
     }
 
@@ -43,8 +43,8 @@ class SubscribersListResult
         return $this->Limit;
     }
 
-    public function getSubscribers(): array
+    public function getList(): array
     {
-        return $this->Subscribers;
+        return $this->List;
     }
 }
